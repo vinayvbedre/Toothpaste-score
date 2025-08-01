@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DentalScore India – Toothpaste Grading</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    #app {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #ddd;
+      padding: 2rem;
+    }
+    h1 {
+      color: #1E88E5;
+      margin-top: 0;
+    }
+    h2 {
+      color: #333;
+      margin-top: 1.5rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    select, input[type="text"] {
+      font-size: 1rem;
+      padding: 0.5rem;
+      margin-top: 1rem;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #cdd;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: #e9f4ff;
+    }
+    tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    #result-card {
+      display: none;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #f1f8fb;
+      border-left: 4px solid #1E88E5;
+      border-radius: 6px;
+    }
+    .score-large {
+      font-size: 2.5rem;
+      color: #2e7d32;
+      font-weight: bold;
+      margin: 0.5rem 0;
+    }
+    .note {
+      font-size: 0.95rem;
+      color: #555;
+      margin-top: 0.5rem;
+    }
+    footer {
+      font-size: 0.9rem;
+      text-align: center;
+      margin-top: 2rem;
+      color: #777;
+    }
+    .category {
+      margin-top: 2rem;
+      background: #f0f7ff;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    .category h3 {
+      margin-top: 0;
+      color: #1a73e8;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      margin: 0.3rem;
+      background: #1E88E5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1565C0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>DentalScore India</h1>
+    <p><strong>Developed by Dr. Vinay V Bedre (BDS, MDS, LLB, PhD Scholar)</strong><br>
+    Smile Dental Clinic, Pusad – Orthodontics</p>
+
+    <input id="search" type="text" placeholder="Search brand or variant…">
+    <select id="brandSelect">
+      <option value="">Select a toothpaste brand/variant</option>
+    </select>
+
+    <div id="result-card">
+      <h2 id="brandVariant"></h2>
+      <p class="score-large" id="totalScore"></p>
+      <div class="note" id="whyGrade"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Score</th>
+            <th>Explanation</th>
+          </tr>
+        </thead>
+        <tbody id="paramsTableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="category">
+      <h3>Browse by Category</h3>
+      <button onclick="filterByCategory('all')">All Products</button>
+      <button onclick="filterByCategory('major')">Major Brands</button>
+      <button onclick="filterByCategory('ayurvedic')">Ayurvedic/Herbal</button>
+      <button onclick="filterByCategory('kids')">Kids Toothpastes</button>
+      <button onclick="filterByCategory('pharma')">Pharma/Prescription</button>
+      <button onclick="filterByCategory('niche')">Niche/Specialty</button>
+    </div>
+
+    <footer>
+      &copy; 2025 Dr. Vinay V Bedre, Smile Dental Clinic Pusad Orthodontics – All Rights Reserved
+    </footer>
+  </div>
+
+  <script>
+    const toothpasteData = [
+      // Major Brands (30 examples)
+      {
+        id: "colgate-strong-teeth", brand: "Colgate", variant: "Strong Teeth", score: 8.5,
+        category: "major",
+        why: "High fluoride content, proven anti-cavity protection, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "1450ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "RDA ~70" },
+          { name: "Anti-plaque", score: 0.8, reason: "Basic protection" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-total", brand: "Colgate", variant: "Total", score: 9.0,
+        category: "major",
+        why: "Comprehensive protection with triclosan alternative, good fluoride content.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "1450ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "RDA ~70" },
+          { name: "Anti-plaque", score: 1.0, reason: "Zinc citrate system" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Detailed" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-visible-white", brand: "Colgate", variant: "Visible White", score: 8.2,
+        category: "major",
+        why: "Good whitening with moderate abrasives, contains fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Higher for whitening" },
+          { name: "Whitening", score: 0.9, reason: "Mild abrasives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-charcoal", brand: "Colgate", variant: "Charcoal Clean", score: 7.8,
+        category: "major",
+        why: "Charcoal for whitening but higher abrasiveness, contains fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "High due to charcoal" },
+          { name: "Whitening", score: 0.9, reason: "Charcoal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "pepsodent-germicheck", brand: "Pepsodent", variant: "GermiCheck", score: 8.2,
+        category: "major",
+        why: "Good fluoride system with antibacterial protection, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "RDA ~65" },
+          { name: "Anti-plaque", score: 0.9, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "pepsodent-expert", brand: "Pepsodent", variant: "Expert", score: 8.5,
+        category: "major",
+        why: "Advanced formula with better plaque control, contains fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "RDA ~65" },
+          { name: "Anti-plaque", score: 1.0, reason: "Enhanced" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "closeup-redhot", brand: "Close-Up", variant: "Red Hot", score: 7.8,
+        category: "major",
+        why: "Good for fresh breath but higher abrasiveness, contains SLS.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "RDA ~80" },
+          { name: "Anti-plaque", score: 0.7, reason: "Basic" },
+          { name: "pH balance", score: 0.6, reason: "Slightly acidic" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "closeup-white", brand: "Close-Up", variant: "White Attraction", score: 8.0,
+        category: "major",
+        why: "Whitening formula with moderate abrasives, contains fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 0.9, reason: "Mild abrasives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "sensodyne-rapid-relief", brand: "Sensodyne", variant: "Rapid Relief", score: 9.2,
+        category: "major",
+        why: "Clinical strength fluoride, fast-acting desensitization, low abrasiveness, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "1450ppm fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "RDA ~62 (safe)" },
+          { name: "Anti-plaque / anti-gingivitis", score: 1.0, reason: "Stannous fluoride" },
+          { name: "Desensitizing agents", score: 1.0, reason: "Potassium nitrate" },
+          { name: "pH balance", score: 0.7, reason: "Near neutral pH" },
+          { name: "Foaming and surfactants", score: 0.7, reason: "SLS-free" },
+          { name: "Remineralization support", score: 0.8, reason: "Fluoride + stannous" },
+          { name: "Microbiome compatibility", score: 0.6, reason: "Non-disruptive" },
+          { name: "Label transparency", score: 0.3, reason: "Full compliance" },
+          { name: "Absence of harmful additives", score: 0.2, reason: "No parabens/triclosan" }
+        ]
+      },
+      {
+        id: "sensodyne-repair", brand: "Sensodyne", variant: "Repair & Protect", score: 9.3,
+        category: "major",
+        why: "Novamin technology for enamel repair, excellent for sensitivity, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Low RDA" },
+          { name: "Enamel repair", score: 1.0, reason: "Novamin" },
+          { name: "Desensitizing agents", score: 1.0, reason: "Potassium nitrate" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 1.0, reason: "Novamin + fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-total-advanced", brand: "Colgate", variant: "Total Advanced", score: 9.0,
+        category: "major",
+        why: "Fluoride, zinc-based anti-plaque system, safe RDA, full label and no banned agents.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "1450ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate RDA" },
+          { name: "Anti-plaque / anti-gingivitis", score: 1.0, reason: "Zinc citrate + copolymer" },
+          { name: "Desensitizing agents", score: 0.7, reason: "Mild sensitivity protection" },
+          { name: "pH balance", score: 0.7, reason: "Neutral range" },
+          { name: "Foaming and surfactants", score: 0.6, reason: "SLS present" },
+          { name: "Remineralization support", score: 0.8, reason: "Fluoride + silica" },
+          { name: "Microbiome compatibility", score: 0.6, reason: "Balanced" },
+          { name: "Label transparency", score: 0.3, reason: "International standard" },
+          { name: "Absence of harmful additives", score: 0.2, reason: "Safe globally" }
+        ]
+      },
+      {
+        id: "oral-b-pro-expert", brand: "Oral-B", variant: "Pro-Expert", score: 8.8,
+        category: "major",
+        why: "Professional formula with stannous fluoride for comprehensive protection.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Stannous fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Stannous fluoride" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.9, reason: "Stannous fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "oral-b-gum", brand: "Oral-B", variant: "Gum & Enamel", score: 8.6,
+        category: "major",
+        why: "Specialized for gum health with stannous fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Stannous fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Stannous fluoride" },
+          { name: "Anti-gingivitis", score: 1.0, reason: "Enhanced gum protection" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.9, reason: "Stannous fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "glister-multi", brand: "Glister", variant: "Multi-Action", score: 8.5,
+        category: "major",
+        why: "MLS formula with good fluoride system, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "MLS system" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "glister-herbal", brand: "Glister", variant: "Herbal", score: 8.0,
+        category: "major",
+        why: "Herbal ingredients with fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal + fluoride" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "signal-white", brand: "Signal", variant: "White Now", score: 8.1,
+        category: "major",
+        why: "Whitening formula with blue covarine technology, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 1.0, reason: "Blue covarine" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "aquafresh-white", brand: "Aquafresh", variant: "White & Shine", score: 8.0,
+        category: "major",
+        why: "Triple protection formula with whitening, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 0.9, reason: "Mild abrasives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "arm-hammer-advance", brand: "Arm & Hammer", variant: "Advance White", score: 8.3,
+        category: "major",
+        why: "Baking soda formula for whitening, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 1.0, reason: "Baking soda" },
+          { name: "pH balance", score: 0.8, reason: "Alkaline" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "crest-complete", brand: "Crest", variant: "Complete", score: 8.5,
+        category: "major",
+        why: "Comprehensive protection with stannous fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Stannous fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Stannous fluoride" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.9, reason: "Stannous fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "parodontax-fluoride", brand: "Parodontax", variant: "Daily Fluoride", score: 8.7,
+        category: "major",
+        why: "Specialized for gum health with unique flavor, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Enhanced" },
+          { name: "Anti-gingivitis", score: 1.0, reason: "Gum protection" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "pepsodent-ayurvedic", brand: "Pepsodent", variant: "Ayurvedic", score: 7.5,
+        category: "major",
+        why: "Herbal ingredients with fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-salt", brand: "Colgate", variant: "Active Salt", score: 8.0,
+        category: "major",
+        why: "Salt formula for gum health, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Salt" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Salt" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-neem", brand: "Colgate", variant: "Vedshakti Neem", score: 7.8,
+        category: "major",
+        why: "Neem-based with fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Neem" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Neem" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-herbal", brand: "Colgate", variant: "Herbal", score: 7.7,
+        category: "major",
+        why: "Herbal ingredients with fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-cibaca", brand: "Colgate", variant: "Cibaca", score: 7.5,
+        category: "major",
+        why: "Budget fluoride toothpaste, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.7, reason: "Basic" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "colgate-sensitive", brand: "Colgate", variant: "Sensitive Pro-Relief", score: 8.9,
+        category: "major",
+        why: "Pro-Argin technology for sensitivity, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Desensitizing", score: 1.0, reason: "Pro-Argin" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.6, reason: "Contains SLS" },
+          { name: "Remineralization", score: 0.9, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "No harmful additives" }
+        ]
+      },
+
+      // Ayurvedic/Herbal (20 examples)
+      {
+        id: "dabur-red-paste", brand: "Dabur", variant: "Red Paste", score: 6.4,
+        category: "ayurvedic",
+        why: "Ayurvedic actives & abrasives, no fluoride, traditional ingredients, compliant under AYUSH.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.2, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.1, reason: "Mineral abrasives" },
+          { name: "Anti-plaque / anti-gingivitis", score: 0.9, reason: "Herbal ingredients" },
+          { name: "Desensitizing agents", score: 0.6, reason: "Clove content" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming and surfactants", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization support", score: 0.5, reason: "Traditional minerals" },
+          { name: "Microbiome compatibility", score: 0.6, reason: "Non-active base" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional labeling" },
+          { name: "Absence of harmful additives", score: 0.2, reason: "No harmfuls" }
+        ]
+      },
+      {
+        id: "dabur-meswak", brand: "Dabur", variant: "Meswak", score: 6.6,
+        category: "ayurvedic",
+        why: "Meswak extract with herbal ingredients, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Meswak" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "dabur-babool", brand: "Dabur", variant: "Babool", score: 6.5,
+        category: "ayurvedic",
+        why: "Babool extract with herbal ingredients, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Babool" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "dabur-lal-dant", brand: "Dabur", variant: "Lal Dant Manjan", score: 6.0,
+        category: "ayurvedic",
+        why: "Traditional tooth powder with herbal ingredients, high abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.1, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.5, reason: "High" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.7, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.4, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "patanjali-dantkanti", brand: "Patanjali", variant: "Dant Kanti", score: 6.8,
+        category: "ayurvedic",
+        why: "Herbal formulation with traditional ingredients but lacks fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Herbal abrasives" },
+          { name: "Anti-plaque", score: 0.9, reason: "Neem/tulsi" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal actives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal minerals" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "patanjali-dantkanti-advanced", brand: "Patanjali", variant: "Dant Kanti Advanced", score: 7.0,
+        category: "ayurvedic",
+        why: "Improved herbal formulation with some modern ingredients, still no fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Enhanced herbal" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Herbal actives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.6, reason: "Herbal minerals" },
+          { name: "Label transparency", score: 0.3, reason: "Improved" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "patanjali-babool", brand: "Patanjali", variant: "Babool", score: 6.5,
+        category: "ayurvedic",
+        why: "Babool-based herbal toothpaste, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Babool" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "patanjali-neem", brand: "Patanjali", variant: "Neem", score: 6.7,
+        category: "ayurvedic",
+        why: "Neem-based herbal toothpaste, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Neem" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Neem" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "vicco-vajradanti", brand: "Vicco", variant: "Vajradanti", score: 7.0,
+        category: "ayurvedic",
+        why: "Traditional ayurvedic formula with herbal ingredients, sugar-free option available.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal protection" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Herbal actives" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Turmeric/other herbs" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal minerals" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "vicco-turmeric", brand: "Vicco", variant: "Turmeric", score: 7.1,
+        category: "ayurvedic",
+        why: "Turmeric-based herbal toothpaste, anti-inflammatory benefits, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Turmeric" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Anti-inflammatory" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "himalaya-complete", brand: "Himalaya", variant: "Complete Care", score: 7.5,
+        category: "ayurvedic",
+        why: "Herbal formulation with some modern ingredients, better than traditional ayurvedic pastes.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Some fluoride variants" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Neem/pomegranate" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal actives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Some SLS-free" },
+          { name: "Remineralization", score: 0.6, reason: "Herbal + some fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Better than traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "himalaya-sparkling", brand: "Himalaya", variant: "Sparkling White", score: 7.3,
+        category: "ayurvedic",
+        why: "Herbal whitening formula with pomegranate, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.5, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Whitening", score: 0.8, reason: "Pomegranate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "himalaya-hiora", brand: "Himalaya", variant: "Hiora K", score: 7.0,
+        category: "ayurvedic",
+        why: "Herbal formula with clove and mint, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Clove/mint" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "biotique-basil", brand: "Biotique", variant: "Basil & Clove", score: 7.0,
+        category: "ayurvedic",
+        why: "Herbal formulation with traditional ingredients but lacks fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.7, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "biotique-neem", brand: "Biotique", variant: "Neem", score: 7.1,
+        category: "ayurvedic",
+        why: "Neem-based herbal toothpaste, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Neem" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Neem" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Neem" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "auromere-ayurvedic", brand: "Auromere", variant: "Ayurvedic", score: 7.2,
+        category: "ayurvedic",
+        why: "Traditional ayurvedic formula with herbal ingredients, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Detailed" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "auromere-licorice", brand: "Auromere", variant: "Licorice", score: 7.3,
+        category: "ayurvedic",
+        why: "Licorice-based herbal toothpaste, anti-inflammatory benefits.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Licorice" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Anti-inflammatory" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Detailed" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "zandu-dantveer", brand: "Zandu", variant: "Dantveer", score: 6.9,
+        category: "ayurvedic",
+        why: "Ayurvedic formula with multiple herbs, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "baidyanath-neem", brand: "Baidyanath", variant: "Neem", score: 6.8,
+        category: "ayurvedic",
+        why: "Neem-based ayurvedic toothpaste, traditional formula.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Neem" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Neem" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Neem" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "baidyanath-red", brand: "Baidyanath", variant: "Red", score: 6.7,
+        category: "ayurvedic",
+        why: "Traditional red tooth powder formula, high abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.2, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.4, reason: "High" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.7, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.4, reason: "Herbal" },
+          { name: "Label transparency", score: 0.2, reason: "Traditional" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "sri-sri-sudanta", brand: "Sri Sri", variant: "Sudanta", score: 7.0,
+        category: "ayurvedic",
+        why: "Ayurvedic herbal toothpaste with multiple ingredients, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "Anti-gingivitis", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+
+      // Kids Toothpastes (15 examples)
+      {
+        id: "colgate-kids-strawberry", brand: "Colgate", variant: "Kids Strawberry", score: 8.0,
+        category: "kids",
+        why: "Safe fluoride concentration for children, fun flavors, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe if swallowed" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Kid-friendly" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Low SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "colgate-kids-bubble", brand: "Colgate", variant: "Kids Bubble Fruit", score: 8.0,
+        category: "kids",
+        why: "Fun bubble gum flavor for kids, safe fluoride, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe if swallowed" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Bubble gum" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Low SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "colgate-kids-spiderman", brand: "Colgate", variant: "Kids Spider-Man", score: 8.0,
+        category: "kids",
+        why: "Character-themed to encourage brushing, safe fluoride, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe if swallowed" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Mild fruit" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Low SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "pepsodent-kids", brand: "Pepsodent", variant: "Kids", score: 7.8,
+        category: "kids",
+        why: "Kid-friendly formula with fluoride, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe if swallowed" },
+          { name: "Flavor acceptance", score: 0.9, reason: "Mild fruit" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Low SLS" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "closeup-kids", brand: "Close-Up", variant: "Kids", score: 7.7,
+        category: "kids",
+        why: "Fun flavors for kids, safe fluoride, low abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe if swallowed" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Fruity" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.6, reason: "Low SLS" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "pediflor-kidz", brand: "Pediflor", variant: "Kidz", score: 8.2,
+        category: "kids",
+        why: "Pharma-grade children's toothpaste with optimal fluoride, recommended by dentists.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "500ppm fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low RDA" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe formulation" },
+          { name: "Flavor acceptance", score: 0.9, reason: "Mild flavors" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Pharma-grade" }
+        ]
+      },
+      {
+        id: "mamaearth-kids", brand: "Mamaearth", variant: "Kids Natural", score: 7.5,
+        category: "kids",
+        why: "Natural ingredients, fluoride-free option available, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Fluoride-free option" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Natural ingredients" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Fruit flavors" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Xylitol" },
+          { name: "Label transparency", score: 0.3, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "dentoshine-bubblegum", brand: "Dentoshine", variant: "Kids Bubble Gum", score: 7.8,
+        category: "kids",
+        why: "Fun flavors for kids, low fluoride concentration, safe if swallowed.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Low fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Bubble gum" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Low" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "dentoshine-orange", brand: "Dentoshine", variant: "Kids Orange", score: 7.8,
+        category: "kids",
+        why: "Orange flavor for kids, low fluoride, safe if swallowed.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Low fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Orange" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Low" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "patanjali-junior", brand: "Patanjali", variant: "Junior Dant Kanti", score: 7.0,
+        category: "kids",
+        why: "Herbal formula for kids, no fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Safety for kids", score: 1.0, reason: "Herbal" },
+          { name: "Flavor acceptance", score: 0.9, reason: "Mild herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "himalaya-kids", brand: "Himalaya", variant: "Herbal Kids", score: 7.2,
+        category: "kids",
+        why: "Herbal formula for kids, some variants with fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.5, reason: "Some fluoride variants" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Safety for kids", score: 1.0, reason: "Herbal" },
+          { name: "Flavor acceptance", score: 0.9, reason: "Mild fruit" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.6, reason: "Herbal/fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "biotique-kids", brand: "Biotique", variant: "Kids", score: 7.1,
+        category: "kids",
+        why: "Natural herbal formula for kids, no fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Safety for kids", score: 1.0, reason: "Natural" },
+          { name: "Flavor acceptance", score: 0.9, reason: "Mild fruit" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "toms-maine-kids", brand: "Tom's of Maine", variant: "Kids Silly Strawberry", score: 7.9,
+        category: "kids",
+        why: "Natural ingredients, fluoride option available, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride option" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Natural" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Strawberry" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride option" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "hello-kids", brand: "Hello", variant: "Kids Wild Strawberry", score: 7.8,
+        category: "kids",
+        why: "Natural ingredients, fluoride option available, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride option" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Natural" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Strawberry" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride option" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+      {
+        id: "jd-kids", brand: "JD's", variant: "Kids Toothpaste", score: 7.5,
+        category: "kids",
+        why: "Regional brand with kid-friendly flavors, low fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Low fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Safety for kids", score: 1.0, reason: "Safe" },
+          { name: "Flavor acceptance", score: 1.0, reason: "Fruity" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.3, reason: "Child-safe" }
+        ]
+      },
+
+      // Pharma/Prescription (15 examples)
+      {
+        id: "clinpro-5000", brand: "Clinpro", variant: "5000", score: 9.5,
+        category: "pharma",
+        why: "Prescription-strength high fluoride toothpaste for high caries risk patients.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "5000ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Enhanced" },
+          { name: "Remineralization", score: 1.0, reason: "High fluoride" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.7, reason: "Reduced SLS" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Rx only" }
+        ]
+      },
+      {
+        id: "gc-mousse", brand: "GC", variant: "Tooth Mousse", score: 9.3,
+        category: "pharma",
+        why: "CPP-ACP technology for remineralization, often recommended post-whitening.",
+        params: [
+          { name: "Remineralization", score: 2.0, reason: "CPP-ACP" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low" },
+          { name: "Sensitivity relief", score: 1.0, reason: "Calcium phosphate" },
+          { name: "pH balance", score: 0.8, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "None" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Medical device" }
+        ]
+      },
+      {
+        id: "apagard-premio", brand: "Apagard", variant: "Premio", score: 9.1,
+        category: "pharma",
+        why: "Nano-hydroxyapatite technology as fluoride alternative, excellent remineralization.",
+        params: [
+          { name: "Remineralization", score: 2.0, reason: "n-HAp" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Anti-plaque", score: 0.9, reason: "Good" },
+          { name: "Sensitivity relief", score: 0.9, reason: "n-HAp" },
+          { name: "pH balance", score: 0.8, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "No fluoride" }
+        ]
+      },
+      {
+        id: "biotene-drymouth", brand: "Biotene", variant: "Dry Mouth", score: 8.5,
+        category: "pharma",
+        why: "Specialized for dry mouth sufferers, enzyme system, SLS-free.",
+        params: [
+          { name: "Moisturizing", score: 2.0, reason: "Enzyme system" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Anti-plaque", score: 0.8, reason: "Enzymatic" },
+          { name: "pH balance", score: 0.8, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "For sensitive mouths" }
+        ]
+      },
+      {
+        id: "sensodyne-pronamel", brand: "Sensodyne", variant: "ProNamel", score: 9.0,
+        category: "pharma",
+        why: "Specialized for acid erosion protection, low abrasiveness, fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Very low" },
+          { name: "Erosion protection", score: 1.0, reason: "Specialized" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.7, reason: "Reduced" },
+          { name: "Remineralization", score: 0.9, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "For sensitive teeth" }
+        ]
+      },
+      {
+        id: "thermoseal-ra", brand: "Thermoseal", variant: "RA", score: 8.8,
+        category: "pharma",
+        why: "For sensitive teeth with potassium nitrate, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Desensitizing", score: 1.0, reason: "Potassium nitrate" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Rx recommended" }
+        ]
+      },
+      {
+        id: "hexidine", brand: "Hexidine", variant: "Oral Gel", score: 8.7,
+        category: "pharma",
+        why: "Chlorhexidine-based for gingivitis control, professional use.",
+        params: [
+          { name: "Anti-gingivitis", score: 2.0, reason: "Chlorhexidine" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low" },
+          { name: "Anti-plaque", score: 1.0, reason: "Chlorhexidine" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "None" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Short-term use" }
+        ]
+      },
+      {
+        id: "previDent-5000", brand: "PreviDent", variant: "5000 Plus", score: 9.4,
+        category: "pharma",
+        why: "High fluoride prescription toothpaste for caries prevention.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "5000ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Remineralization", score: 1.0, reason: "High fluoride" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.7, reason: "Reduced" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Rx only" }
+        ]
+      },
+      {
+        id: "fluorogard", brand: "Fluorogard", variant: "Professional", score: 9.0,
+        category: "pharma",
+        why: "Professional fluoride toothpaste for high caries risk patients.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "High fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Remineralization", score: 1.0, reason: "Fluoride" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.7, reason: "Reduced" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Professional use" }
+        ]
+      },
+      {
+        id: "sensoform-k", brand: "Sensoform", variant: "K", score: 8.6,
+        category: "pharma",
+        why: "Potassium nitrate formula for sensitivity, professional recommendation.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Desensitizing", score: 1.0, reason: "Potassium nitrate" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Professional recommendation" }
+        ]
+      },
+      {
+        id: "denta-5000", brand: "Denta", variant: "5000 Plus", score: 9.2,
+        category: "pharma",
+        why: "High fluoride toothpaste for professional use.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "5000ppm fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Remineralization", score: 1.0, reason: "High fluoride" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.7, reason: "Reduced" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Rx recommended" }
+        ]
+      },
+      {
+        id: "astra-tooth", brand: "AstraZeneca", variant: "AstraTooth", score: 8.5,
+        category: "pharma",
+        why: "Specialized formula for dry mouth and sensitivity, professional recommendation.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Moisturizing", score: 1.0, reason: "For dry mouth" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Professional recommendation" }
+        ]
+      },
+      {
+        id: "biotene-fluoride", brand: "Biotene", variant: "Fluoride", score: 8.6,
+        category: "pharma",
+        why: "For dry mouth with fluoride protection, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.9, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Moisturizing", score: 1.0, reason: "Enzyme system" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "For dry mouth" }
+        ]
+      },
+      {
+        id: "gc-mousse-plus", brand: "GC", variant: "Tooth Mousse Plus", score: 9.4,
+        category: "pharma",
+        why: "CPP-ACP with fluoride for enhanced remineralization, professional use.",
+        params: [
+          { name: "Remineralization", score: 2.0, reason: "CPP-ACP + fluoride" },
+          { name: "Abrasiveness", score: 1.5, reason: "Very low" },
+          { name: "Sensitivity relief", score: 1.0, reason: "Calcium phosphate" },
+          { name: "pH balance", score: 0.8, reason: "Optimal" },
+          { name: "Foaming agents", score: 0.8, reason: "None" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Medical device" }
+        ]
+      },
+      {
+        id: "apagard-mplus", brand: "Apagard", variant: "M-plus", score: 9.2,
+        category: "pharma",
+        why: "Nano-hydroxyapatite with fluoride, excellent remineralization.",
+        params: [
+          { name: "Remineralization", score: 2.0, reason: "n-HAp + fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Low" },
+          { name: "Anti-plaque", score: 0.9, reason: "Good" },
+          { name: "Sensitivity relief", score: 0.9, reason: "n-HAp" },
+          { name: "pH balance", score: 0.8, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Professional" }
+        ]
+      },
+      {
+        id: "dentistan", brand: "Dentistan", variant: "Professional", score: 8.7,
+        category: "pharma",
+        why: "Professional formula with stannous fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 2.0, reason: "Stannous fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Stannous fluoride" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Antibacterial" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.9, reason: "Stannous fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Professional" },
+          { name: "Safety", score: 0.3, reason: "Professional use" }
+        ]
+      },
+
+      // Niche/Specialty (20 examples)
+      {
+        id: "marvis-classic", brand: "Marvis", variant: "Classic Strong Mint", score: 8.0,
+        category: "niche",
+        why: "Premium Italian toothpaste with unique flavors, moderate fluoride content.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Flavor experience", score: 1.0, reason: "Unique" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "marvis-jasmine", brand: "Marvis", variant: "Jasmine Mint", score: 8.0,
+        category: "niche",
+        why: "Unique jasmine flavor, premium toothpaste, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Flavor experience", score: 1.0, reason: "Jasmine" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "toms-maine", brand: "Tom's of Maine", variant: "Whole Care", score: 7.8,
+        category: "niche",
+        why: "Natural ingredients, fluoride option available, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Fluoride option" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Plant-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride option" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "toms-maine-fluoride-free", brand: "Tom's of Maine", variant: "Fluoride-Free", score: 6.5,
+        category: "niche",
+        why: "Natural ingredients but lacks fluoride, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.2, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Plant-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Xylitol" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "hello-charcoal", brand: "Hello", variant: "Activated Charcoal", score: 7.5,
+        category: "niche",
+        why: "Charcoal for whitening, fluoride, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.4, reason: "Higher due to charcoal" },
+          { name: "Whitening", score: 0.9, reason: "Charcoal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "hello-fluoride-free", brand: "Hello", variant: "Fluoride-Free", score: 6.7,
+        category: "niche",
+        why: "Natural ingredients but lacks fluoride, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Plant-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Xylitol" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "dr-bronners-cinnamon", brand: "Dr. Bronner's", variant: "Cinnamon", score: 7.0,
+        category: "niche",
+        why: "Organic ingredients, fluoride-free, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "No fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Organic" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Organic" }
+        ]
+      },
+      {
+        id: "weleda-calendula", brand: "Weleda", variant: "Calendula", score: 7.2,
+        category: "niche",
+        why: "Natural ingredients with calendula, fluoride-free, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Plant-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "aesop", brand: "Aesop", variant: "Toothpaste", score: 7.5,
+        category: "niche",
+        why: "Premium natural toothpaste with herbal ingredients, fluoride-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.4, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Plant-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "bluem-oxygenating", brand: "BlueM", variant: "Oxygenating", score: 7.5,
+        category: "niche",
+        why: "Unique oxygenating formula, moderate fluoride, SLS-free.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Fresh breath", score: 1.0, reason: "Oxygenating" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "curaprox-black", brand: "Curaprox", variant: "Black is White", score: 8.2,
+        category: "niche",
+        why: "Unique black toothpaste with whitening, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 0.9, reason: "Unique formula" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "curaprox-enzycal", brand: "Curaprox", variant: "Enzycal", score: 8.5,
+        category: "niche",
+        why: "Enzyme system for plaque control, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 1.0, reason: "Enzyme system" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "earthpaste", brand: "Earthpaste", variant: "Peppermint", score: 6.8,
+        category: "niche",
+        why: "Clay-based natural toothpaste, fluoride-free, unique formula.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.3, reason: "Herbal" },
+          { name: "Abrasiveness", score: 1.1, reason: "Moderate" },
+          { name: "Natural ingredients", score: 1.0, reason: "Clay-based" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.8, reason: "SLS-free" },
+          { name: "Remineralization", score: 0.5, reason: "Herbal" },
+          { name: "Label transparency", score: 0.4, reason: "Detailed" },
+          { name: "Safety", score: 0.3, reason: "Natural" }
+        ]
+      },
+      {
+        id: "bentodent-premium", brand: "Bentodent", variant: "Premium Mint", score: 7.5,
+        category: "niche",
+        why: "Premium Indian brand with herbal ingredients, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Natural ingredients", score: 0.9, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "bentodent-cardamom", brand: "Bentodent", variant: "Cardamom", score: 7.4,
+        category: "niche",
+        why: "Unique cardamom flavor with herbal ingredients, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Flavor experience", score: 1.0, reason: "Cardamom" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "freshclor", brand: "Freshclor", variant: "Oral Rinse", score: 7.8,
+        category: "niche",
+        why: "Unique oral rinse toothpaste hybrid, fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Fresh breath", score: 1.0, reason: "Rinse-like" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "denta-plus", brand: "Denta Plus", variant: "Whitening", score: 7.6,
+        category: "niche",
+        why: "Whitening formula with moderate abrasives, contains fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.7, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Whitening", score: 0.9, reason: "Mild abrasives" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "denta-pro", brand: "Denta Pro", variant: "Complete Care", score: 7.8,
+        category: "niche",
+        why: "Comprehensive protection formula, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.8, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.3, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.9, reason: "Enhanced" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.8, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "denta-clean", brand: "Denta Clean", variant: "Herbal", score: 7.2,
+        category: "niche",
+        why: "Herbal ingredients with fluoride, moderate abrasiveness.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-plaque", score: 0.8, reason: "Herbal" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "anchor-clove", brand: "Anchor", variant: "Clove Power", score: 7.3,
+        category: "niche",
+        why: "Clove-based formula for gum health, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Clove" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      },
+      {
+        id: "lever-ayush-clove", brand: "Lever Ayush", variant: "Anti Cavity Clove", score: 7.1,
+        category: "niche",
+        why: "Clove-based ayurvedic formula, moderate fluoride.",
+        params: [
+          { name: "Anti-caries efficacy", score: 1.6, reason: "Fluoride" },
+          { name: "Abrasiveness", score: 1.2, reason: "Moderate" },
+          { name: "Anti-gingivitis", score: 0.9, reason: "Clove" },
+          { name: "pH balance", score: 0.7, reason: "Neutral" },
+          { name: "Foaming agents", score: 0.7, reason: "Moderate" },
+          { name: "Remineralization", score: 0.7, reason: "Fluoride" },
+          { name: "Label transparency", score: 0.3, reason: "Standard" },
+          { name: "Safety", score: 0.2, reason: "No harmful additives" }
+        ]
+      }
+    ];
+
+    const brandSelect = document.getElementById("brandSelect");
+    const searchInput = document.getElementById("search");
+    const resultCard = document.getElementById("result-card");
+    const brandVariant = document.getElementById("brandVariant");
+    const totalScore = document.getElementById("totalScore");
+    const whyGrade = document.getElementById("whyGrade");
+    const tableBody = document.getElementById("paramsTableBody");
+
+    function populateSelect(dataList) {
+      brandSelect.innerHTML = '<option value="">Select a toothpaste brand/variant</option>';
+      dataList.forEach(item => {
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = `${item.brand} — ${item.variant}`;
+        brandSelect.appendChild(opt);
+      });
+    }
+
+    function filterByCategory(category) {
+      let filtered;
+      if (category === 'all') {
+        filtered = toothpasteData;
+      } else {
+        filtered = toothpasteData.filter(item => item.category === category);
+      }
+      populateSelect(filtered);
+      resultCard.style.display = "none";
+    }
+
+    function displayResult(product) {
+      resultCard.style.display = "block";
+      brandVariant.textContent = `${product.brand} — ${product.variant}`;
+      totalScore.textContent = `${product.score.toFixed(1)} / 10`;
+      whyGrade.textContent = "Why this grade: " + product.why;
+      tableBody.innerHTML = "";
+      product.params.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${p.name}</td><td>${p.score}</td><td>${p.reason}</td>`;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    searchInput.addEventListener("input", () => {
+      const text = searchInput.value.toLowerCase();
+      const filtered = toothpasteData.filter(tp =>
+        (tp.brand.toLowerCase().includes(text) || 
+         tp.variant.toLowerCase().includes(text) ||
+         `${tp.brand} ${tp.variant}`.toLowerCase().includes(text))
+      );
+      populateSelect(filtered);
+      if (text === "") {
+        resultCard.style.display = "none";
+      }
+    });
+
+    brandSelect.addEventListener("change", () => {
+      const selected = brandSelect.value;
+      const match = toothpasteData.find(tp => tp.id === selected);
+      if (match) {
+        displayResult(match);
+      } else {
+        resultCard.style.display = "none";
+      }
+    });
+
+    // Initial populate
+    populateSelect(toothpasteData);
+  </script>
+</body>
+</html>
